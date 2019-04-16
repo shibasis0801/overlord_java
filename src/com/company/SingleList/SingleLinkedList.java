@@ -3,6 +3,11 @@ package com.company.SingleList;
 import com.company.base.LinkedListContract;
 import com.company.base.NodeContract;
 
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 public class SingleLinkedList<Value> implements LinkedListContract<Value> {
 
     SingleNode<Value> head, tail;
@@ -97,5 +102,53 @@ public class SingleLinkedList<Value> implements LinkedListContract<Value> {
     @Override
     public boolean isEmpty() {
         return (head == tail) && (head == null);
+    }
+
+    @Override
+    public void forEach(Consumer<Value> action, NodeContract<Value> start, NodeContract<Value> stop) {
+        while (start != stop) {
+            action.accept(start.getValue());
+            start = start.getNext();
+        }
+    }
+
+    @Override
+    public <Result> SingleLinkedList<Result> map(Function<Value, Result> transform) {
+        SingleLinkedList<Result> output = new SingleLinkedList<>();
+
+        forEach(value -> {
+            output.pushBack(transform.apply(value));
+        });
+
+        return output;
+    }
+
+    @Override
+    public SingleLinkedList<Value> filter(Predicate<Value> condition) {
+        SingleLinkedList<Value> output = new SingleLinkedList<>();
+
+        forEach(value -> {
+            if (condition.test(value))
+                output.pushBack(value);
+        });
+
+        return output;
+    }
+
+    @Override
+    public Value reduce(BiFunction<Value, Value, Value> accumulate) {
+        SingleNode<Value> start = head;
+        Value result = null;
+
+        // Couldn't use lambda here because you cannot modify from inside a lambda.
+        while (start != null) {
+            if (result == null)
+                result = start.value;
+
+            result = accumulate.apply(result, start.value);
+            start = start.next;
+        }
+
+        return result;
     }
 }
